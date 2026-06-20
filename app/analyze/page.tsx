@@ -39,7 +39,7 @@ export default function AnalyzePage() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("${process.env.NEXT_PUBLIC_API_URL}/api/parse-excel", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/parse-excel`, {
         method: "POST",
         body: formData,
       });
@@ -81,7 +81,7 @@ export default function AnalyzePage() {
     setThinking(true);
 
     try {
-      const res = await fetch("${process.env.NEXT_PUBLIC_API_URL}/api/chat", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
