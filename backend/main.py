@@ -87,17 +87,41 @@ def _score_page(content: str) -> int:
 
 
 def extract_content_from_pdfs(files: List[UploadFile]) -> str:
+    import pypdfium2 as pdfium
     all_sections = []
     for file in files:
+        raw_bytes = file.file.read()
+
+        # Pass 1: lightweight text extraction with pypdfium2 to score every page
+        scored_page_nums = []
+        pdf_light = pdfium.PdfDocument(raw_bytes)
+        for page_num in range(len(pdf_light)):
+            page = pdf_light[page_num]
+            textpage = page.get_textpage()
+            text = textpage.get_text_range()
+            textpage.close()
+            page.close()
+            if text.strip():
+                score = _score_page(text)
+                scored_page_nums.append((score, page_num + 1))
+        pdf_light.close()
+
+        # Keep only top 12 pages by score
+        scored_page_nums.sort(key=lambda x: -x[0])
+        top_page_nums = {pn for _, pn in scored_page_nums[:12]}
+
+        # Pass 2: pdfplumber only on the top pages for accurate table extraction
+        import io
         scored_pages = []
-        with pdfplumber.open(file.file) as pdf:
+        with pdfplumber.open(io.BytesIO(raw_bytes)) as pdf:
             for page_num, page in enumerate(pdf.pages, 1):
+                if page_num not in top_page_nums:
+                    continue
                 content = _page_content(page)
                 if content.strip():
                     score = _score_page(content)
                     scored_pages.append((score, page_num, content))
 
-        # Sort: financial statement pages first, noise pages last
         scored_pages.sort(key=lambda x: -x[0])
 
         file_sections = [f"=== FILE: {file.filename} ==="]
