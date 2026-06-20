@@ -447,7 +447,7 @@ export default function Home() {
       )}
 
       {/* ── PREVIEW: verify numbers ── */}
-      {(status === "preview" || status === "building") && financials && (
+      {(status === "preview" || status === "building" || status === "error") && financials && (
         <div className="w-full max-w-4xl">
           {/* Header */}
           <div className="mb-6 flex items-start justify-between">
