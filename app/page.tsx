@@ -440,24 +440,56 @@ export default function Home() {
       )}
 
       {/* ── EXTRACTING ── */}
-      {status === "extracting" && (
-        <div className="w-full max-w-2xl mt-8">
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-8 text-center">
-            <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="font-semibold text-blue-900 text-lg">Extracting financial data</p>
-            <p className="text-blue-600 text-sm mt-2">Reading tables and calling AI — this takes 30–60 seconds</p>
-            <p className="text-blue-400 text-xs mt-1 font-mono">{elapsed}s elapsed — still working, please wait…</p>
-            <div className="mt-5 space-y-2 text-left max-w-sm mx-auto">
-              {["Parsing PDF tables page by page", "Identifying financial statement sections", "Extracting exact numbers as reported", "Detecting units and scale"].map((s) => (
-                <div key={s} className="flex items-center gap-2 text-sm text-blue-700">
-                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
-                  {s}
-                </div>
-              ))}
+      {status === "extracting" && (() => {
+        const progress = Math.round(90 * (1 - Math.exp(-elapsed / 25)));
+        const steps = [
+          { label: "Parsing PDF tables page by page", threshold: 10 },
+          { label: "Identifying financial statement sections", threshold: 25 },
+          { label: "Extracting exact numbers as reported", threshold: 50 },
+          { label: "Detecting units and scale", threshold: 70 },
+        ];
+        return (
+          <div className="w-full max-w-2xl mt-8">
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                <p className="font-semibold text-blue-900 text-lg">Extracting financial data</p>
+              </div>
+
+              {/* Progress bar */}
+              <div className="w-full bg-blue-100 rounded-full h-2.5 mb-1">
+                <div
+                  className="bg-blue-500 h-2.5 rounded-full transition-all duration-1000 ease-out"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-xs text-blue-400 mb-5">
+                <span>{progress}%</span>
+                <span>{elapsed}s elapsed</span>
+              </div>
+
+              {/* Step checklist */}
+              <div className="space-y-2">
+                {steps.map((s) => {
+                  const done = progress >= s.threshold;
+                  return (
+                    <div key={s.label} className="flex items-center gap-2 text-sm">
+                      {done ? (
+                        <svg className="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <div className="w-4 h-4 rounded-full border-2 border-blue-200 flex-shrink-0" />
+                      )}
+                      <span className={done ? "text-blue-700 font-medium" : "text-blue-400"}>{s.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── PREVIEW: verify numbers ── */}
       {(status === "preview" || status === "building" || status === "error") && financials && (
