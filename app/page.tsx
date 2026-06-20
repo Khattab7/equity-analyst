@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useDropzone } from "react-dropzone";
 
 type Status = "idle" | "extracting" | "preview" | "building" | "done" | "error";
@@ -171,6 +171,18 @@ export default function Home() {
   const [downloadUrl, setDownloadUrl] = useState("");
   const [fileName, setFileName] = useState("");
   const [showRaw, setShowRaw] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (status === "extracting") {
+      setElapsed(0);
+      timerRef.current = setInterval(() => setElapsed((s) => s + 1), 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [status]);
 
   const onDrop = useCallback((accepted: File[]) => {
     setFiles((prev) => [...prev, ...accepted]);
@@ -433,7 +445,8 @@ export default function Home() {
           <div className="bg-blue-50 border border-blue-100 rounded-xl p-8 text-center">
             <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="font-semibold text-blue-900 text-lg">Extracting financial data</p>
-            <p className="text-blue-600 text-sm mt-2">Reading tables from your PDFs — this takes ~20–40 seconds</p>
+            <p className="text-blue-600 text-sm mt-2">Reading tables and calling AI — this takes 30–60 seconds</p>
+            <p className="text-blue-400 text-xs mt-1 font-mono">{elapsed}s elapsed — still working, please wait…</p>
             <div className="mt-5 space-y-2 text-left max-w-sm mx-auto">
               {["Parsing PDF tables page by page", "Identifying financial statement sections", "Extracting exact numbers as reported", "Detecting units and scale"].map((s) => (
                 <div key={s} className="flex items-center gap-2 text-sm text-blue-700">
