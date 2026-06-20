@@ -24,14 +24,9 @@ IMAGE_MEDIA_TYPES = {
 
 app = FastAPI()
 
-# Accept localhost in dev + any production URL set via ALLOWED_ORIGINS env var
-_origins = ["http://localhost:3000"]
-if os.environ.get("ALLOWED_ORIGINS"):
-    _origins += [o.strip() for o in os.environ["ALLOWED_ORIGINS"].split(",")]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_origins,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
